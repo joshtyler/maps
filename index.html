@@ -52,7 +52,7 @@
     // Load and display ZXY tile layer on the map.
     const basemap = L.tileLayer('https://api.os.uk/maps/raster/v1/zxy/Leisure_27700/{z}/{x}/{y}.png?key=' + apiKey).addTo(map);
 
-map.locate({setView: true, watch: true}) /* This will return map so you can do chaining */
+map.locate({setView: true, watch: true, enableHighAccuracy: true}) /* This will return map so you can do chaining */
         .on('locationfound', function(e){
             var marker = L.marker([e.latitude, e.longitude]).bindPopup('Your are here :)');
             var circle = L.circle([e.latitude, e.longitude], e.accuracy/2, {
