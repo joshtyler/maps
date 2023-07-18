@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>OS Maps API | Basic Map ZXY (EPSG:27700) | Leaflet</title>
+	<title>Josh Maps</title>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/OrdnanceSurvey/os-api-branding@0.3.1/os-api-branding.css" />
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 	<style>
@@ -44,7 +44,11 @@
 			transformCoords([ -238375.0, 0.0 ]),
 			transformCoords([ 900000.0, 1376256.0 ])
 		],
-		attributionControl: false
+		attributionControl: false,
+		// doubleClickZoom is set to false because it causes a complex error, probably to do with the coordinate system?
+		doubleClickZoom : false,
+		// bounceAtZoomLimits looks really weird when set to true on mobile
+		bounceAtZoomLimits : false
 	};
 
 	const map = L.map('map', mapOptions);
@@ -52,23 +56,48 @@
 	// Load and display ZXY tile layer on the map.
 	const basemap = L.tileLayer('https://api.os.uk/maps/raster/v1/zxy/Leisure_27700/{z}/{x}/{y}.png?key=' + apiKey).addTo(map);
 
-	map.locate({setView: true, watch: true, enableHighAccuracy: true}) /* This will return map so you can do chaining */
-			.on('locationfound', function(e){
-				var marker = L.marker([e.latitude, e.longitude]).bindPopup('Your are here :)');
-				var circle = L.circle([e.latitude, e.longitude], e.accuracy/2, {
-					weight: 1,
-					color: 'blue',
-					fillColor: '#cacaca',
-					fillOpacity: 0.2
-				});
-				map.addLayer(marker);
-				map.addLayer(circle);
-				console.log("Location updated");
-			})
-			.on('locationerror', function(e){
-				console.log(e);
-				alert("Location access denied.");
+	// Do an initial non-high accuracy location of the map to set the view and initial marker
+	var user_location_marker;
+	var user_location_circle;
+	map.on('locationerror', function(e){
+		console.log(e);
+		console.log("Could not establish location");
+	});
+	map.on('locationfound', function(e){
+		if(!user_location_marker)
+		{
+			// If this is the first time we've fixed the location
+			console.assert(!user_location_circle);
+			
+			var user_location_icon = L.icon({
+				iconUrl: 'position_marker.png',
+				iconSize: [20, 20],
 			});
+			
+			
+			user_location_marker = L.marker([e.latitude, e.longitude], {icon : user_location_icon});
+			user_location_circle = L.circle([e.latitude, e.longitude], e.accuracy/2, {
+				weight: 1,
+				color: 'blue',
+				fillColor: '#cacaca',
+				fillOpacity: 0.2
+			});
+			user_location_marker.addTo(map);
+			user_location_circle.addTo(map);
+			console.log("Got initial location");
+			
+			// Now we've got the inital location, add an update handler and switch to high resultion updates that don't move the map
+			map.locate({watch: true, enableHighAccuracy: true});
+		} else {
+			console.assert(user_location_circle);
+			// If this is a location update
+			user_location_marker.setLatLng([e.latitude, e.longitude]);
+			user_location_circle.setLatLng([e.latitude, e.longitude]);
+			user_location_circle.setRadius(e.accuracy/2);
+			console.log("Got location update");
+		}
+	});
+		map.locate({setView: true});
 
 
 </script>
