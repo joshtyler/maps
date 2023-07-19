@@ -20,6 +20,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.0/proj4.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4leaflet/1.0.2/proj4leaflet.min.js"></script>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79.0/dist/L.Control.Locate.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79.0/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+
 <link rel="stylesheet" href="leaflet_control_select/leaflet.control.select.css" />
 <script src="leaflet_control_select/leaflet.control.select.src.js"></script>
 
@@ -84,56 +87,22 @@
 		maxNativeZoom: max_native_zoom
 	}).addTo(map);
 
-	// Do an initial non-high accuracy location of the map to set the view and initial marker
-	var user_location_marker;
-	var user_location_circle;
-	
-	//var heading_popup = L.popup().setContent('No heading information')
-	
-	map.on('locationerror', function(e){
-		console.log(e);
-		console.log("Could not establish location");
-	});
-	map.on('locationfound', function(e){
-		if(!user_location_marker)
-		{
-			// If this is the first time we've fixed the location
-			console.assert(!user_location_circle);
-			
-			var user_location_icon = L.icon({
-				iconUrl: 'position_marker.png',
-				iconSize: [20, 20],
-			});
-			
-			
-			user_location_marker = L.marker([e.latitude, e.longitude], {icon : user_location_icon});
-			//user_location_marker.bindPopup(heading_popup);
-			user_location_circle = L.circle([e.latitude, e.longitude], e.accuracy/2, {
-				weight: 1,
-				color: 'blue',
-				fillColor: '#cacaca',
-				fillOpacity: 0.2
-			});
-			user_location_marker.addTo(map);
-			user_location_circle.addTo(map);
-			console.log("Got initial location");
-			
-			// Now we've got the inital location, add an update handler and switch to high resultion updates that don't move the map
-			map.locate({watch: true, enableHighAccuracy: true});
-		} else {
-			console.assert(user_location_circle);
-			// If this is a location update
-			user_location_marker.setLatLng([e.latitude, e.longitude]);
-			user_location_circle.setLatLng([e.latitude, e.longitude]);
-			user_location_circle.setRadius(e.accuracy/2);
-			//console.log(e.heading);
-			//heading_popup.setContent(e.heading);
-			//heading_popup.openPopup();
 
-			console.log("Got location update");
+	L.control.locate({
+		setView:"once",
+		locateOptions:{
+			enableHighAccuracy: true,
+		},
+		// See https://github.com/domoritz/leaflet-locatecontrol/blob/c52209075bafda7f8cbf6f5f928641f9f839b4ea/src/L.Control.Locate.js#L255
+		// For defaults
+		compassStyle:{
+			fillColor: "#ee2a2a",
+			weight:1,
+			radius:9,
+			width:18,
+			depth:18
 		}
-	});
-		map.locate({setView: true});
+	}).addTo(map);
 
 	var menu_items = [
 		{ label: "Normal", value: "normal" },
