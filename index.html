@@ -59,6 +59,9 @@
 	// Do an initial non-high accuracy location of the map to set the view and initial marker
 	var user_location_marker;
 	var user_location_circle;
+	
+	//var heading_popup = L.popup().setContent('No heading information')
+	
 	map.on('locationerror', function(e){
 		console.log(e);
 		console.log("Could not establish location");
@@ -76,6 +79,7 @@
 			
 			
 			user_location_marker = L.marker([e.latitude, e.longitude], {icon : user_location_icon});
+			//user_location_marker.bindPopup(heading_popup);
 			user_location_circle = L.circle([e.latitude, e.longitude], e.accuracy/2, {
 				weight: 1,
 				color: 'blue',
@@ -94,6 +98,10 @@
 			user_location_marker.setLatLng([e.latitude, e.longitude]);
 			user_location_circle.setLatLng([e.latitude, e.longitude]);
 			user_location_circle.setRadius(e.accuracy/2);
+			//console.log(e.heading);
+			//heading_popup.setContent(e.heading);
+			//heading_popup.openPopup();
+
 			console.log("Got location update");
 		}
 	});
