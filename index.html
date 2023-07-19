@@ -151,12 +151,36 @@
 
 				basemap.options.minNativeZoom = min_zoom;
 				basemap.options.maxNativeZoom = max_native_zoom;
-			} elif(new_value == "lock_25") {
-				map.options.minZoom = min_25k_zoom - 1;
+			} else if(new_value == "lock_25") {
+				map.options.minZoom = min_25k_zoom - 2;
 				map.options.maxZoom = max_25k_zoom;
 
 				basemap.options.minNativeZoom = min_25k_zoom;
 				basemap.options.maxNativeZoom = max_25k_zoom;
+			} else if(new_value == "lock_50") {
+				map.options.minZoom = min_50k_zoom - 2;
+				map.options.maxZoom = max_50k_zoom;
+
+				basemap.options.minNativeZoom = min_50k_zoom;
+				basemap.options.maxNativeZoom = max_50k_zoom;
+			} else if(new_value == "overzoom") {
+				map.options.minZoom = min_zoom;
+				map.options.maxZoom = max_zoom;
+
+				basemap.options.minNativeZoom = min_zoom;
+				basemap.options.maxNativeZoom = max_native_zoom;
+			} else {
+				alert("Unreachable menu option")
+			}
+
+			if(map.getZoom() > map.options.maxZoom)
+			{
+				map.setZoom(map.options.maxZoom)
+			}
+
+			if(map.getZoom() < map.options.minZoom)
+			{
+				map.setZoom(map.options.minZoom)
 			}
 	};
 
