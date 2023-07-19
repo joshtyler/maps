@@ -23,8 +23,20 @@
 <script>
 
 	// Setup the EPSG:27700 (British National Grid) projection.
+	// This is mostly from https://labs.os.uk/public/os-data-hub-examples/os-maps-api/zxy-27700-basic-map#leaflet
+	const max_zoom = 11;
+
+	// Our resolutions list needs to contain as many elements as the number of zoom levels to avoid
+	// Error attempted to load infinite number of tiles
+	// See https://github.com/Leaflet/Leaflet/issues/6416#issuecomment-1360369989
+	// Empirically, I've found that we actually need one more than this if we want to support double click to zoom
+	// (Double clicking on the max zoom level otherwise produces a similar error)
+	var resolutions = [896.0];
+	for (var i = 0; i <= max_zoom; i++) {
+		resolutions.push(resolutions[resolutions.length -1]/2);
+	}
 	const crs = new L.Proj.CRS('EPSG:27700', '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs', {
-		resolutions: [ 896.0, 448.0, 224.0, 112.0, 56.0, 28.0, 14.0, 7.0, 3.5, 1.75 ],
+		resolutions: resolutions,
 		origin: [ -238375.0, 1376256.0 ]
 	});
 
@@ -36,8 +48,8 @@
 	// Initialize the map.
 	const mapOptions = {
 		crs: crs,
-		minZoom: 0,
-		maxZoom: 9,
+		minZoom: 6,
+		maxZoom: max_zoom,
 		center: transformCoords([ 337297, 503695 ]),
 		zoom: 7,
 		maxBounds: [
@@ -45,8 +57,6 @@
 			transformCoords([ 900000.0, 1376256.0 ])
 		],
 		attributionControl: false,
-		// doubleClickZoom is set to false because it causes a complex error, probably to do with the coordinate system?
-		doubleClickZoom : false,
 		// bounceAtZoomLimits looks really weird when set to true on mobile
 		bounceAtZoomLimits : false
 	};
@@ -54,7 +64,11 @@
 	const map = L.map('map', mapOptions);
 
 	// Load and display ZXY tile layer on the map.
-	const basemap = L.tileLayer('https://api.os.uk/maps/raster/v1/zxy/Leisure_27700/{z}/{x}/{y}.png?key=' + apiKey).addTo(map);
+	const basemap = L.tileLayer('https://api.os.uk/maps/raster/v1/zxy/Leisure_27700/{z}/{x}/{y}.png?key=' + apiKey,
+	{
+		maxNativeZoom: 9,
+		minNativeZoom: 8,
+	}).addTo(map);
 
 	// Do an initial non-high accuracy location of the map to set the view and initial marker
 	var user_location_marker;
