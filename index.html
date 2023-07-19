@@ -19,13 +19,25 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.0/proj4.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4leaflet/1.0.2/proj4leaflet.min.js"></script>
+
+<link rel="stylesheet" href="leaflet_control_select/leaflet.control.select.css" />
+<script src="leaflet_control_select/leaflet.control.select.src.js"></script>
+
 <script src="apikey.js"></script>
 <script>
 
 	// Setup the EPSG:27700 (British National Grid) projection.
-	// This is mostly from https://labs.os.uk/public/os-data-hub-examples/os-maps-api/zxy-27700-basic-map#leaflet
-	const max_zoom = 11;
+	const min_zoom = 0; // Fits the whole of the UK
+	const max_native_zoom = 9; // Last supported leisure map zoom
+	const max_zoom = 11; // This is the max zoom that makes any sense - it is just very blurry after this
 
+	// Min and max zooms for different leisure maps
+	const min_50k_zoom = 6;
+	const max_50k_zoom = 7;
+	const min_25k_zoom = 8;
+	const max_25k_zoom = 9;
+
+	// This is mostly from https://labs.os.uk/public/os-data-hub-examples/os-maps-api/zxy-27700-basic-map#leaflet
 	// Our resolutions list needs to contain as many elements as the number of zoom levels to avoid
 	// Error attempted to load infinite number of tiles
 	// See https://github.com/Leaflet/Leaflet/issues/6416#issuecomment-1360369989
@@ -48,14 +60,16 @@
 	// Initialize the map.
 	const mapOptions = {
 		crs: crs,
-		minZoom: 6,
+		minZoom: min_zoom,
 		maxZoom: max_zoom,
-		center: transformCoords([ 337297, 503695 ]),
-		zoom: 7,
 		maxBounds: [
 			transformCoords([ -238375.0, 0.0 ]),
 			transformCoords([ 900000.0, 1376256.0 ])
 		],
+
+		zoom: 7,
+		center: transformCoords([ 337297, 503695 ]),
+
 		attributionControl: false,
 		// bounceAtZoomLimits looks really weird when set to true on mobile
 		bounceAtZoomLimits : false
@@ -64,10 +78,10 @@
 	const map = L.map('map', mapOptions);
 
 	// Load and display ZXY tile layer on the map.
-	const basemap = L.tileLayer('https://api.os.uk/maps/raster/v1/zxy/Leisure_27700/{z}/{x}/{y}.png?key=' + apiKey,
+	var basemap = L.tileLayer('https://api.os.uk/maps/raster/v1/zxy/Leisure_27700/{z}/{x}/{y}.png?key=' + apiKey,
 	{
-		maxNativeZoom: 9,
-		minNativeZoom: 8,
+		minNativeZoom: min_zoom,
+		maxNativeZoom: max_native_zoom
 	}).addTo(map);
 
 	// Do an initial non-high accuracy location of the map to set the view and initial marker
@@ -120,6 +134,41 @@
 		}
 	});
 		map.locate({setView: true});
+
+	var menu_items = [
+		{ label: "Normal", value: "normal" },
+		{ label: "Lock 25k", value: "lock_25" },
+		{ label: "Lock 50k", value: "lock_50" },
+		{ label: "Overzoom", value: "overzoom" },
+	];
+
+	menu_select_function = function (new_value) {
+			console.log("Selected "+new_value+" in menu");
+			if(new_value == "normal")
+			{
+				map.options.minZoom = min_zoom;
+				map.options.maxZoom = max_native_zoom;
+
+				basemap.options.minNativeZoom = min_zoom;
+				basemap.options.maxNativeZoom = max_native_zoom;
+			} elif(new_value == "lock_25") {
+				map.options.minZoom = min_25k_zoom - 1;
+				map.options.maxZoom = max_25k_zoom;
+
+				basemap.options.minNativeZoom = min_25k_zoom;
+				basemap.options.maxNativeZoom = max_25k_zoom;
+			}
+	};
+
+	menu_select_function("normal")
+
+	L.control.select({
+		position: "topleft",
+		selectedDefault: "normal",
+		items: menu_items,
+		onSelect: menu_select_function
+	})
+	.addTo(map);
 
 
 </script>
