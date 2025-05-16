@@ -163,6 +163,34 @@
 	})
 	.addTo(map);
 
+	async function load_geojson(url)
+	{
+		try
+		{
+			const response = await fetch(url);
+			if (!response.ok)
+			{
+				throw new Error(`Response status: ${response.status}`);
+			}
+
+			const data = await response.json();
+			const json_layer = L.geoJSON(data).addTo(map);
+			map.fitBounds(json_layer.getBounds());
+		} catch (error) {
+			console.error(error.message);
+		}
+	}
+
+	// If the user passes in a parameter with ?geojson=http://foo.com/test.json
+	// Then display it on the map
+	const params = new URLSearchParams(document.location.search)
+	const geojson = params.get("geojson")
+	if(geojson)
+	{
+		load_geojson(geojson)
+	}
+
+
 
 </script>
 
