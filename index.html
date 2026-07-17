@@ -176,9 +176,12 @@
 			const data = await response.json();
 
 			var line_style = {
-			    "color": "#ff7800",
+			    "color": "#344ceb",
 			    "weight": 8,
-			    "opacity": 0.8
+			    "opacity": 0.8,
+				"dashArray": "4,1",
+				"lineCap": "round"
+				
 			};
 			
 			const json_layer = L.geoJSON(data, {style: line_style}).addTo(map);
